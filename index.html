@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IDX Fundamental BI · 555 Perusahaan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-7"/></svg>
+        </div>
+        <div>
+          <div class="brand-title">IDX Fundamental</div>
+          <div class="brand-sub">Business Intelligence</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" data-page="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          <span>Overview</span>
+        </a>
+        <a class="nav-item" data-page="leaderboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v3a3 3 0 0 1-3 3"/><path d="M7 5H4v3a3 3 0 0 0 3 3"/></svg>
+          <span>Leaderboard</span>
+        </a>
+        <a class="nav-item" data-page="company">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12"/><path d="M3 9h18"/></svg>
+          <span>Perusahaan</span>
+        </a>
+        <a class="nav-item" data-page="compare">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h7"/><path d="M14 6h7"/><path d="M3 12h7"/><path d="M14 12h7"/><path d="M3 18h7"/><path d="M14 18h7"/></svg>
+          <span>Compare</span>
+        </a>
+        <a class="nav-item" data-page="ratios">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 16L16 8"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/></svg>
+          <span>Rasio Keuangan</span>
+        </a>
+        <a class="nav-item" data-page="screener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg>
+          <span>Screener</span>
+        </a>
+        <a class="nav-item" data-page="trends">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>
+          <span>Tren Pasar</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="foot-stat"><span>Perusahaan</span><b id="footCompanies">–</b></div>
+        <div class="foot-stat"><span>Periode</span><b id="footYears">–</b></div>
+        <div class="foot-stat"><span>Metrik</span><b id="footMetrics">–</b></div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="page-title">
+          <h1 id="pageTitle">Overview</h1>
+          <p id="pageSub">Ringkasan fundamental 555 emiten Bursa Efek Indonesia</p>
+        </div>
+        <div class="top-controls">
+          <div class="year-select">
+            <label>Tahun</label>
+            <div class="year-pills" id="yearPills"></div>
+          </div>
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="globalSearch" placeholder="Cari kode emiten… (mis. AALI, BBCA)" autocomplete="off" />
+          </div>
+        </div>
+      </header>
+
+      <!-- Pages -->
+      <section class="page" data-page="overview">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Total Revenue</div><div class="kpi-value" id="kpiRevenue">–</div><div class="kpi-meta" id="kpiRevenueMeta"></div><div class="spark"><canvas data-spark="revenue"></canvas></div></div>
+          <div class="kpi"><div class="kpi-label">Net Income</div><div class="kpi-value" id="kpiNetIncome">–</div><div class="kpi-meta" id="kpiNetIncomeMeta"></div><div class="spark"><canvas data-spark="netIncome"></canvas></div></div>
+          <div class="kpi"><div class="kpi-label">Total Assets</div><div class="kpi-value" id="kpiAssets">–</div><div class="kpi-meta" id="kpiAssetsMeta"></div><div class="spark"><canvas data-spark="assets"></canvas></div></div>
+          <div class="kpi"><div class="kpi-label">Total Equity</div><div class="kpi-value" id="kpiEquity">–</div><div class="kpi-meta" id="kpiEquityMeta"></div><div class="spark"><canvas data-spark="equity"></canvas></div></div>
+          <div class="kpi"><div class="kpi-label">Avg Net Margin</div><div class="kpi-value" id="kpiNPM">–</div><div class="kpi-meta" id="kpiNPMMeta"></div><div class="spark"><canvas data-spark="npm"></canvas></div></div>
+          <div class="kpi"><div class="kpi-label">Avg ROE</div><div class="kpi-value" id="kpiROE">–</div><div class="kpi-meta" id="kpiROEMeta"></div><div class="spark"><canvas data-spark="roe"></canvas></div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Tren Agregat IDX</h3>
+                <p>Penjumlahan seluruh emiten per tahun (Rp Triliun)</p>
+              </div>
+              <div class="legend-toggle">
+                <button class="chip active" data-trend="Total Revenue">Revenue</button>
+                <button class="chip" data-trend="Net Income">Net Income</button>
+                <button class="chip" data-trend="Total Assets">Assets</button>
+                <button class="chip" data-trend="Total Equity Gross Minority Interest">Equity</button>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h3>Profitabilitas vs Skala</h3>
+                <p>Bubble: Revenue (X) · Net Income (Y) · ukuran = Total Assets</p>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="bubbleChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Top 10 Revenue</h3><p>Berdasarkan tahun terpilih</p></div>
+            </div>
+            <div class="chart-wrap"><canvas id="topRevenue"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div><h3>Top 10 Net Income</h3><p>Laba bersih tertinggi</p></div>
+            </div>
+            <div class="chart-wrap"><canvas id="topNI"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Komposisi Neraca Agregat</h3><p>Aset Lancar vs Non-Lancar · Liabilitas vs Ekuitas</p></div>
+          </div>
+          <div class="grid-2">
+            <div class="chart-wrap small"><canvas id="assetMix"></canvas></div>
+            <div class="chart-wrap small"><canvas id="capitalMix"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="leaderboard">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Leaderboard Emiten</h3><p>Urutkan berdasarkan metrik dan tahun</p></div>
+            <div class="row-controls">
+              <select id="lbMetric"></select>
+              <select id="lbOrder">
+                <option value="desc">Tertinggi</option>
+                <option value="asc">Terendah</option>
+              </select>
+              <select id="lbLimit">
+                <option>10</option><option selected>25</option><option>50</option><option>100</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="lbChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><h3>Tabel Lengkap</h3><p id="lbTableSub"></p></div></div>
+          <div class="table-wrap"><table id="lbTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="company">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Profil Emiten</h3><p>Pilih kode saham untuk melihat fundamental detail</p></div>
+            <div class="row-controls">
+              <select id="companySelect"></select>
+            </div>
+          </div>
+          <div class="company-kpi" id="companyKPI"></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Income Statement</h3><p>Revenue · Cost · Gross Profit · Net Income</p></div></div>
+            <div class="chart-wrap"><canvas id="cIncome"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Balance Sheet</h3><p>Aset · Liabilitas · Ekuitas</p></div></div>
+            <div class="chart-wrap"><canvas id="cBalance"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Cash Flow</h3><p>Operating · CapEx · End Cash</p></div></div>
+            <div class="chart-wrap"><canvas id="cCash"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Rasio Keuangan</h3><p>ROE · ROA · NPM · Gross Margin · Current Ratio · DER</p></div></div>
+            <div class="chart-wrap"><canvas id="cRatios"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div><h3>Tabel Fundamental</h3><p>Semua metrik per tahun</p></div></div>
+          <div class="table-wrap"><table id="cTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="compare">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Bandingkan Emiten</h3><p>Pilih hingga 5 perusahaan untuk dibandingkan</p></div>
+            <div class="row-controls">
+              <select id="cmpMetric"></select>
+            </div>
+          </div>
+          <div class="chip-row" id="cmpChips"></div>
+          <div class="chart-wrap"><canvas id="cmpChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><h3>Radar Kekuatan Fundamental</h3><p>Tahun terpilih · skor relatif (0–100) terhadap populasi IDX</p></div></div>
+          <div class="chart-wrap"><canvas id="cmpRadar"></canvas></div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="ratios">
+        <div class="card">
+          <div class="card-head"><div><h3>Distribusi Rasio</h3><p>Sebaran rasio fundamental seluruh emiten · tahun terpilih</p></div></div>
+          <div class="grid-3">
+            <div class="chart-wrap small"><canvas id="distROE"></canvas></div>
+            <div class="chart-wrap small"><canvas id="distROA"></canvas></div>
+            <div class="chart-wrap small"><canvas id="distNPM"></canvas></div>
+            <div class="chart-wrap small"><canvas id="distDER"></canvas></div>
+            <div class="chart-wrap small"><canvas id="distCR"></canvas></div>
+            <div class="chart-wrap small"><canvas id="distGM"></canvas></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Top ROE</h3><p>Return on Equity tertinggi</p></div></div>
+            <div class="chart-wrap"><canvas id="topROE"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Top Net Margin</h3><p>NPM tertinggi</p></div></div>
+            <div class="chart-wrap"><canvas id="topNPM"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="screener">
+        <div class="card">
+          <div class="card-head"><div><h3>Stock Screener Fundamental</h3><p>Saring emiten berdasarkan kriteria fundamental · tahun terpilih</p></div></div>
+          <div class="screener-grid" id="screenerGrid"></div>
+          <div class="screener-actions">
+            <button id="screenerReset" class="btn ghost">Reset</button>
+            <span id="screenerCount" class="muted"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table id="screenerTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="trends">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Total Agregat per Tahun</h3><p>Nilai absolut seluruh emiten · pilih metrik</p></div>
+            <div class="row-controls">
+              <select id="trendMetric"></select>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="trendAbsChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><h3>Pertumbuhan YoY Pasar</h3><p>Persentase perubahan total agregat tahun ke tahun</p></div></div>
+          <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Top Growth Revenue</h3><p>2020 → 2023 (%)</p></div></div>
+            <div class="chart-wrap"><canvas id="topGrowthRev"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Top Growth Net Income</h3><p>2020 → 2023 (%)</p></div></div>
+            <div class="chart-wrap"><canvas id="topGrowthNI"></canvas></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
