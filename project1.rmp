@@ -117,7 +117,6 @@
         <list key="columns"/>
         <parameter key="replenishment_value" value="0"/>
       </operator>
-      <operator activated="true" class="multiply" compatibility="12.1.001" expanded="true" height="82" name="Multiply" width="90" x="380" y="187"/>
       <operator activated="true" class="normalize" compatibility="12.1.001" expanded="true" height="103" name="Normalize" width="90" x="581" y="187">
         <parameter key="return_preprocessing_model" value="false"/>
         <parameter key="attribute_filter_type" value="all"/>
@@ -193,28 +192,47 @@
         <parameter key="use_bias" value="true"/>
         <parameter key="ridge" value="1.0E-8"/>
       </operator>
+      <operator activated="true" class="write_csv" compatibility="12.1.001" expanded="true" height="82" name="Write CSV (2)" width="90" x="1117" y="289">
+        <parameter key="csv_file" value="C:/Users/Dragon/Downloads/businessInteligence-idx/regresi_linear.csv"/>
+        <parameter key="column_separator" value=";"/>
+        <parameter key="write_attribute_names" value="true"/>
+        <parameter key="quote_nominal_values" value="true"/>
+        <parameter key="format_date_attributes" value="true"/>
+        <parameter key="date_format" value="yyyy-MM-dd HH:mm:ss"/>
+        <parameter key="append_to_file" value="false"/>
+        <parameter key="encoding" value="SYSTEM"/>
+      </operator>
+      <operator activated="true" class="write_csv" compatibility="12.1.001" expanded="true" height="82" name="Write CSV" width="90" x="983" y="187">
+        <parameter key="csv_file" value="C:/Users/Dragon/Downloads/businessInteligence-idx/k_means.csv"/>
+        <parameter key="column_separator" value=";"/>
+        <parameter key="write_attribute_names" value="true"/>
+        <parameter key="quote_nominal_values" value="true"/>
+        <parameter key="format_date_attributes" value="true"/>
+        <parameter key="date_format" value="yyyy-MM-dd HH:mm:ss"/>
+        <parameter key="append_to_file" value="false"/>
+        <parameter key="encoding" value="SYSTEM"/>
+      </operator>
       <connect from_op="Retrieve combined_financial_data_idx" from_port="output" to_op="Remove Duplicates" to_port="example set input"/>
       <connect from_op="Remove Duplicates" from_port="example set output" to_op="Filter Account" to_port="example set input"/>
       <connect from_op="Filter Account" from_port="example set output" to_op="Filter Perusahaan cacat" to_port="example set input"/>
       <connect from_op="Filter Perusahaan cacat" from_port="example set output" to_op="Imputasi pada Missing Attributes" to_port="table input"/>
       <connect from_op="Imputasi pada Missing Attributes" from_port="table output" to_op="Pivot" to_port="input"/>
       <connect from_op="Pivot" from_port="output" to_op="Replace Missing Values" to_port="example set input"/>
-      <connect from_op="Replace Missing Values" from_port="example set output" to_op="Multiply" to_port="input"/>
-      <connect from_op="Multiply" from_port="output 1" to_op="Normalize" to_port="example set input"/>
+      <connect from_op="Replace Missing Values" from_port="example set output" to_op="Normalize" to_port="example set input"/>
       <connect from_op="Normalize" from_port="example set output" to_op="Multiply (2)" to_port="input"/>
       <connect from_op="Multiply (2)" from_port="output 1" to_op="Select Attributes" to_port="example set input"/>
       <connect from_op="Multiply (2)" from_port="output 2" to_op="Set Role" to_port="example set input"/>
       <connect from_op="Select Attributes" from_port="example set output" to_op="Clustering" to_port="example set"/>
-      <connect from_op="Clustering" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="Clustering" from_port="clustered set" to_op="Write CSV" to_port="input"/>
       <connect from_op="Set Role" from_port="example set output" to_op="Select Attributes (2)" to_port="example set input"/>
       <connect from_op="Select Attributes (2)" from_port="example set output" to_op="Linear Regression" to_port="training set"/>
-      <connect from_op="Linear Regression" from_port="model" to_port="result 2"/>
-      <connect from_op="Linear Regression" from_port="exampleSet" to_port="result 3"/>
+      <connect from_op="Linear Regression" from_port="exampleSet" to_op="Write CSV (2)" to_port="input"/>
+      <connect from_op="Write CSV (2)" from_port="through" to_port="result 2"/>
+      <connect from_op="Write CSV" from_port="through" to_port="result 1"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
-      <portSpacing port="sink_result 4" spacing="0"/>
     </process>
   </operator>
 </process>

@@ -645,10 +645,12 @@
         sel.appendChild(o);
       });
     }
+    // Validate state.compare — drop any symbol that doesn't exist
+    state.compare = (state.compare || []).filter(s => DATA.find(d => d.symbol === s));
     if (!state.compare.length) {
       // pick top 3 by revenue at last year
       const lastY = YEARS[YEARS.length - 1];
-      state.compare = DATA.map(c => ({ s: c.symbol, v: c.byYear[lastY] && c.byYear[lastY]['Total Revenue'] || 0 }))
+      state.compare = DATA.map(c => ({ s: c.symbol, v: (c.byYear[lastY] && c.byYear[lastY]['Total Revenue']) || 0 }))
         .sort((a, b) => b.v - a.v).slice(0, 3).map(x => x.s);
     }
     drawCompareChips();
@@ -661,31 +663,27 @@
     state.compare.forEach((sym, i) => {
       const span = document.createElement('span');
       span.className = 'pill';
-      span.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${PALETTE[i]}"></span>${sym}<span class="x" data-rm="${sym}">✕</span>`;
+      span.dataset.symbol = sym;
+      span.innerHTML = `<span class="pill-dot" style="background:${PALETTE[i]}"></span><span class="pill-label">${sym}</span><button type="button" class="x" data-rm="${sym}" aria-label="Hapus ${sym}">✕</button>`;
       root.appendChild(span);
     });
     if (state.compare.length < 5) {
       const inp = document.createElement('input');
       inp.placeholder = 'Tambah kode emiten (Enter)…';
-      inp.list = 'companiesDatalist';
+      inp.setAttribute('list', 'companiesDatalist');
       inp.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
           const v = e.target.value.trim().toUpperCase();
           if (v && DATA.find(d => d.symbol === v) && !state.compare.includes(v)) {
             state.compare.push(v);
             drawCompareChips(); drawCompareLine(); drawCompareRadar();
+            e.target.value = '';
           } else { toast('Emiten tidak ditemukan: ' + v); }
         }
       });
       root.appendChild(inp);
       ensureCompaniesDatalist();
     }
-    root.querySelectorAll('[data-rm]').forEach(el => {
-      el.onclick = () => {
-        state.compare = state.compare.filter(s => s !== el.dataset.rm);
-        drawCompareChips(); drawCompareLine(); drawCompareRadar();
-      };
-    });
   }
   function ensureCompaniesDatalist() {
     if (document.getElementById('companiesDatalist')) return;
@@ -698,16 +696,23 @@
   }
   function drawCompareLine() {
     const metric = $('#cmpMetric').value;
-    const datasets = state.compare.map((sym, i) => {
-      const c = DATA.find(d => d.symbol === sym);
-      return {
-        label: sym,
-        data: YEARS.map(y => (c.byYear[y] || {})[metric]),
-        borderColor: PALETTE[i],
-        backgroundColor: PALETTE[i] + '22',
-        tension: .35, borderWidth: 2.5, fill: false, pointRadius: 4
-      };
-    });
+    const datasets = state.compare
+      .map((sym, i) => {
+        const c = DATA.find(d => d.symbol === sym);
+        if (!c) return null;
+        return {
+          label: sym,
+          data: YEARS.map(y => {
+            const v = (c.byYear[y] || {})[metric];
+            return (typeof v === 'number' && !isNaN(v)) ? v : null;
+          }),
+          borderColor: PALETTE[i],
+          backgroundColor: PALETTE[i] + '22',
+          tension: .35, borderWidth: 2.5, fill: false, pointRadius: 4,
+          spanGaps: true
+        };
+      })
+      .filter(Boolean);
     makeChart('cmpChart', {
       type: 'line',
       data: { labels: YEARS, datasets },
@@ -719,9 +724,19 @@
     });
   }
   function drawCompareRadar() {
+    const canvas = document.getElementById('cmpRadar');
+    if (!canvas) return;
+
+    // If the page is hidden, the canvas has 0 size; defer until next frame
+    const parent = canvas.parentElement;
+    const ready = parent && parent.offsetHeight > 0 && parent.offsetWidth > 0;
+    if (!ready) {
+      requestAnimationFrame(() => requestAnimationFrame(drawCompareRadar));
+      return;
+    }
+
     const y = state.year;
     const RAD = ['Total Revenue', 'Net Income', 'Total Assets', 'Total Equity Gross Minority Interest', 'Gross Profit', 'Operating Income'];
-    // Build percentile scores
     const pctRanks = {};
     RAD.forEach(m => {
       const arr = DATA.map(c => c.byYear[y] && c.byYear[y][m]).filter(v => typeof v === 'number');
@@ -731,7 +746,6 @@
     function score(m, v) {
       const arr = pctRanks[m];
       if (!arr.length || typeof v !== 'number') return 0;
-      // Find rank
       let lo = 0, hi = arr.length;
       while (lo < hi) {
         const mid = (lo + hi) >> 1;
@@ -739,20 +753,33 @@
       }
       return Math.round((lo / arr.length) * 100);
     }
-    const datasets = state.compare.map((sym, i) => {
-      const c = DATA.find(d => d.symbol === sym);
-      const r = c.byYear[y] || {};
-      return {
-        label: sym,
-        data: RAD.map(m => score(m, r[m])),
-        backgroundColor: PALETTE[i] + '33',
-        borderColor: PALETTE[i],
-        borderWidth: 2, pointRadius: 3
-      };
-    });
+    const datasets = state.compare
+      .map((sym, i) => {
+        const c = DATA.find(d => d.symbol === sym);
+        if (!c) return null;
+        const r = c.byYear[y] || {};
+        return {
+          label: sym,
+          data: RAD.map(m => score(m, r[m])),
+          backgroundColor: PALETTE[i] + '33',
+          borderColor: PALETTE[i],
+          borderWidth: 2, pointRadius: 3,
+          fill: true
+        };
+      })
+      .filter(Boolean);
+
+    if (!datasets.length) {
+      destroy('cmpRadar');
+      return;
+    }
+
     makeChart('cmpRadar', {
       type: 'radar',
-      data: { labels: RAD.map(m => m.replace('Total ', '').replace(' Gross Minority Interest', '').replace(' Net Minority Interest', '')), datasets },
+      data: {
+        labels: RAD.map(m => m.replace('Total ', '').replace(' Gross Minority Interest', '').replace(' Net Minority Interest', '')),
+        datasets
+      },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
@@ -1031,9 +1058,420 @@
   }
 
   // ============================================================================
+  //  CLUSTERS PAGE
+  // ============================================================================
+  const CLUSTER_COLORS = { 'Sehat': '#10d39c', 'Stabil': '#5b8cff', 'Beresiko': '#ff5d6c' };
+  const CLUSTER_ORDER = ['Sehat', 'Stabil', 'Beresiko'];
+
+  function renderClusters() {
+    // Cluster summary cards
+    const counts = {};
+    DATA.forEach(c => {
+      if (!c.clusterLabel) return;
+      counts[c.clusterLabel] = (counts[c.clusterLabel] || 0) + 1;
+    });
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    function avgFor(label, fn) {
+      const arr = DATA.filter(c => c.clusterLabel === label).map(c => fn(c.byYear[state.year] || {})).filter(v => typeof v === 'number' && isFinite(v));
+      if (!arr.length) return null;
+      arr.sort((a, b) => a - b);
+      return arr[Math.floor(arr.length / 2)]; // median
+    }
+
+    const summaryRoot = $('#clusterSummary');
+    summaryRoot.innerHTML = CLUSTER_ORDER.map(label => {
+      const n = counts[label] || 0;
+      const pct = total ? ((n / total) * 100).toFixed(1) : '0';
+      const desc = {
+        'Sehat': 'Profitabilitas tinggi · Ekuitas kuat · Pertumbuhan baik',
+        'Stabil': 'Kinerja moderat · Risiko terkontrol · Mayoritas emiten',
+        'Beresiko': 'Profitabilitas lemah · Leverage tinggi · Perlu kehati-hatian'
+      }[label];
+      const cls = label.toLowerCase();
+      const ni = avgFor(label, r => r['Net Income']);
+      const rev = avgFor(label, r => r['Total Revenue']);
+      const roe = avgFor(label, r => safeDiv(r['Net Income'], r['Total Equity Gross Minority Interest']) * 100);
+      const der = avgFor(label, r => safeDiv(r['Total Liabilities Net Minority Interest'], r['Total Equity Gross Minority Interest']));
+      return `
+        <div class="cluster-card ${cls}">
+          <div class="cl-title"><h3>${label}</h3><span class="badge">${pct}%</span></div>
+          <div class="cl-count">${n}</div>
+          <div class="cl-pct">emiten · ${desc}</div>
+          <div class="cl-stats">
+            <div class="cl-stat"><span>Median Revenue</span><span>${fmtIDR(rev, { rp: true })}</span></div>
+            <div class="cl-stat"><span>Median Net Income</span><span>${fmtIDR(ni, { rp: true })}</span></div>
+            <div class="cl-stat"><span>Median ROE</span><span>${fmtPct(roe)}</span></div>
+            <div class="cl-stat"><span>Median DER</span><span>${der !== null ? fmtNum(der, 2) + 'x' : '–'}</span></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Pie chart
+    makeChart('clusterPie', {
+      type: 'doughnut',
+      data: {
+        labels: CLUSTER_ORDER,
+        datasets: [{
+          data: CLUSTER_ORDER.map(l => counts[l] || 0),
+          backgroundColor: CLUSTER_ORDER.map(l => CLUSTER_COLORS[l]),
+          borderColor: 'rgba(0,0,0,0)', borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} emiten (${((c.parsed / total) * 100).toFixed(1)}%)` } }
+        }
+      }
+    });
+
+    // Radar of cluster financial profiles (median ratios)
+    const radarMetrics = [
+      { label: 'ROE', fn: r => safeDiv(r['Net Income'], r['Total Equity Gross Minority Interest']) * 100 },
+      { label: 'ROA', fn: r => safeDiv(r['Net Income'], r['Total Assets']) * 100 },
+      { label: 'Net Margin', fn: r => safeDiv(r['Net Income'], r['Total Revenue']) * 100 },
+      { label: 'Gross Margin', fn: r => safeDiv(r['Gross Profit'], r['Total Revenue']) * 100 },
+      { label: 'Current Ratio', fn: r => safeDiv(r['Current Assets'], r['Current Liabilities']) },
+      { label: 'Asset Turnover', fn: r => safeDiv(r['Total Revenue'], r['Total Assets']) }
+    ];
+    // Compute median per cluster, then normalize to 0-100 across all clusters
+    const matrix = CLUSTER_ORDER.map(label =>
+      radarMetrics.map(m => avgFor(label, m.fn))
+    );
+    const normalized = radarMetrics.map((m, mi) => {
+      const vals = matrix.map(row => row[mi]).filter(v => typeof v === 'number' && isFinite(v));
+      if (!vals.length) return null;
+      const mn = Math.min(...vals); const mx = Math.max(...vals);
+      const span = mx - mn || 1;
+      return matrix.map(row => row[mi] === null || !isFinite(row[mi]) ? 0 : ((row[mi] - mn) / span) * 100);
+    });
+
+    makeChart('clusterRadar', {
+      type: 'radar',
+      data: {
+        labels: radarMetrics.map(m => m.label),
+        datasets: CLUSTER_ORDER.map((label, i) => ({
+          label,
+          data: radarMetrics.map((_, mi) => normalized[mi] ? normalized[mi][i] : 0),
+          backgroundColor: CLUSTER_COLORS[label] + '33',
+          borderColor: CLUSTER_COLORS[label],
+          borderWidth: 2, pointRadius: 3
+        }))
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255,255,255,.06)' },
+            grid: { color: 'rgba(255,255,255,.06)' },
+            pointLabels: { color: '#94a3c0', font: { size: 11 } },
+            ticks: { backdropColor: 'transparent', color: '#6577a0', stepSize: 25 },
+            min: 0, max: 100
+          }
+        }
+      }
+    });
+
+    // Scatter
+    drawClusterScatter();
+    if (!$('#clusterScatterX').dataset.bound) {
+      $('#clusterScatterX').addEventListener('change', drawClusterScatter);
+      $('#clusterScatterY').addEventListener('change', drawClusterScatter);
+      $('#clusterScatterX').dataset.bound = '1';
+    }
+
+    // Table list
+    $('#clusterFilter').onchange = renderClusterTable;
+    renderClusterTable();
+  }
+
+  function drawClusterScatter() {
+    const xMetric = $('#clusterScatterX').value;
+    const yMetric = $('#clusterScatterY').value;
+    const datasets = CLUSTER_ORDER.map(label => {
+      const points = DATA.filter(c => c.clusterLabel === label).map(c => {
+        const r = c.byYear[state.year] || {};
+        const x = r[xMetric]; const y = r[yMetric]; const ta = r['Total Assets'];
+        if (typeof x !== 'number' || typeof y !== 'number') return null;
+        return { x: x / 1e12, y: y / 1e12, r: Math.max(3, Math.min(22, Math.sqrt(Math.abs(ta || 1) / 1e11) * 1.0)), symbol: c.symbol };
+      }).filter(Boolean);
+      return {
+        label, data: points,
+        backgroundColor: CLUSTER_COLORS[label] + '88',
+        borderColor: CLUSTER_COLORS[label],
+        borderWidth: 1
+      };
+    });
+    makeChart('clusterScatter', {
+      type: 'bubble',
+      data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: c => `${c.raw.symbol} (${c.dataset.label}) · X=${fmtNum(c.parsed.x)}T · Y=${fmtNum(c.parsed.y)}T`
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: xMetric + ' (Rp T)' }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { title: { display: true, text: yMetric + ' (Rp T)' }, grid: { color: 'rgba(255,255,255,.04)' } }
+        }
+      }
+    });
+  }
+
+  function renderClusterTable() {
+    const filter = $('#clusterFilter').value;
+    const rows = DATA.filter(c => filter === 'all' || c.clusterLabel === filter)
+      .map(c => {
+        const r = c.byYear[state.year] || {};
+        return {
+          symbol: c.symbol,
+          cluster: c.clusterLabel,
+          rev: r['Total Revenue'],
+          ni: r['Net Income'],
+          ta: r['Total Assets'],
+          roe: safeDiv(r['Net Income'], r['Total Equity Gross Minority Interest']) * 100,
+          der: safeDiv(r['Total Liabilities Net Minority Interest'], r['Total Equity Gross Minority Interest'])
+        };
+      })
+      .sort((a, b) => (b.rev || 0) - (a.rev || 0));
+
+    $('#clusterListSub').textContent = `${rows.length} emiten · klaster: ${filter === 'all' ? 'Semua' : filter}`;
+    const thead = $('#clusterTable thead');
+    const tbody = $('#clusterTable tbody');
+    thead.innerHTML = `<tr><th>#</th><th>Symbol</th><th>Klaster</th><th class="num">Revenue</th><th class="num">Net Income</th><th class="num">Total Assets</th><th class="num">ROE</th><th class="num">DER</th></tr>`;
+    tbody.innerHTML = rows.slice(0, 200).map((x, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td class="symbol">${x.symbol}</td>
+        <td><span class="tag tag-${x.cluster.toLowerCase()}">${x.cluster}</span></td>
+        <td class="num">${fmtIDR(x.rev, { rp: true })}</td>
+        <td class="num">${fmtIDR(x.ni, { rp: true })}</td>
+        <td class="num">${fmtIDR(x.ta, { rp: true })}</td>
+        <td class="num">${fmtPct(x.roe)}</td>
+        <td class="num">${typeof x.der === 'number' && isFinite(x.der) ? fmtNum(x.der, 2) + 'x' : '–'}</td>
+      </tr>`).join('');
+  }
+
+  // ============================================================================
+  //  FORECAST PAGE
+  // ============================================================================
+  function renderForecast() {
+    const sel = $('#fcCompany');
+    if (!sel.options.length) {
+      DATA.slice().sort((a, b) => a.symbol.localeCompare(b.symbol)).forEach(c => {
+        const o = document.createElement('option'); o.value = c.symbol; o.textContent = c.symbol;
+        sel.appendChild(o);
+      });
+      sel.value = state.company || DATA[0].symbol;
+      sel.addEventListener('change', () => { state.company = sel.value; drawForecast(); });
+      const horizon = $('#fcHorizon');
+      const horizonLabel = $('#fcHorizonLabel');
+      const updateLabel = () => {
+        const n = parseInt(horizon.value, 10);
+        horizonLabel.textContent = `Horizon: ${n} tahun (sd ${2023 + n})`;
+        drawForecast();
+      };
+      horizon.addEventListener('input', updateLabel);
+      updateLabel();
+      $('#fcSearch').addEventListener('input', renderForecastTable);
+    }
+    drawForecast();
+    drawForecastTops();
+    renderForecastTable();
+  }
+
+  function drawForecast() {
+    const sym = $('#fcCompany').value;
+    const horizon = parseInt($('#fcHorizon').value, 10);
+    const company = DATA.find(d => d.symbol === sym);
+    if (!company) return;
+
+    const histYears = company.epsHistory.map(h => h.year);
+    const histVals = company.epsHistory.map(h => h.eps);
+    const fc = (company.epsForecast || []).slice(0, horizon);
+
+    const labels = [...histYears, ...fc.map(f => f.year)];
+    const histDataset = {
+      label: 'EPS Historis',
+      data: [...histVals, ...new Array(horizon).fill(null)],
+      borderColor: '#22d3ee',
+      backgroundColor: 'rgba(34,211,238,.18)',
+      tension: .3, fill: true, borderWidth: 2.5, pointRadius: 5, pointHoverRadius: 7,
+      pointBackgroundColor: '#22d3ee'
+    };
+    // Forecast dataset starts at the last historical point so the line is continuous
+    const lastHist = histVals[histVals.length - 1];
+    const fcSeries = [...new Array(histVals.length - 1).fill(null), lastHist, ...fc.map(f => f.eps)];
+    const fcDataset = {
+      label: 'Prediksi EPS',
+      data: fcSeries,
+      borderColor: '#5b8cff',
+      backgroundColor: 'rgba(91,140,255,.10)',
+      borderDash: [6, 4],
+      tension: .15, fill: false, borderWidth: 2.5, pointRadius: 5, pointHoverRadius: 7,
+      pointBackgroundColor: '#5b8cff'
+    };
+    // Confidence band (rough): ±|slope|*sqrt(year offset) — visual only
+    const reg = company.epsModel;
+    let bandUpper = null, bandLower = null;
+    if (reg) {
+      const sigma = Math.abs(reg.b) * 0.5 + Math.abs(lastHist) * 0.05;
+      bandUpper = labels.map((y, i) => i < histVals.length - 1 ? null : (i === histVals.length - 1 ? lastHist : (reg.a + reg.b * (y - histYears[0])) + sigma * Math.sqrt(y - 2023)));
+      bandLower = labels.map((y, i) => i < histVals.length - 1 ? null : (i === histVals.length - 1 ? lastHist : (reg.a + reg.b * (y - histYears[0])) - sigma * Math.sqrt(y - 2023)));
+    }
+
+    const datasets = [histDataset, fcDataset];
+    if (bandUpper) {
+      datasets.push({
+        label: 'Upper band', data: bandUpper, borderColor: 'rgba(91,140,255,.0)',
+        backgroundColor: 'rgba(91,140,255,.10)', fill: '+1', pointRadius: 0, borderWidth: 0
+      });
+      datasets.push({
+        label: 'Lower band', data: bandLower, borderColor: 'rgba(91,140,255,.0)',
+        backgroundColor: 'rgba(91,140,255,.10)', fill: false, pointRadius: 0, borderWidth: 0
+      });
+    }
+
+    makeChart('forecastChart', {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { filter: it => !/band/i.test(it.text) }
+          },
+          tooltip: {
+            callbacks: {
+              label: c => c.parsed.y === null ? null : `${c.dataset.label}: ${fmtNum(c.parsed.y, 2)}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            title: { display: true, text: 'EPS (Rp)' },
+            grid: { color: 'rgba(255,255,255,.04)' },
+            ticks: { callback: v => fmtNum(v, 0) }
+          }
+        }
+      }
+    });
+
+    // KPI strip
+    const root = $('#forecastKPI');
+    const items = [];
+    company.epsHistory.forEach(h => items.push(`<div class="fcKpi histor"><div class="fcKpi-year">EPS ${h.year}</div><div class="fcKpi-val">${h.eps !== null ? fmtNum(h.eps, 2) : '–'}</div></div>`));
+    fc.forEach(f => items.push(`<div class="fcKpi fut"><div class="fcKpi-year">PRED ${f.year}</div><div class="fcKpi-val">${fmtNum(f.eps, 2)}</div></div>`));
+    if (reg) {
+      items.push(`<div class="fcKpi"><div class="fcKpi-year">Slope · R²</div><div class="fcKpi-val" style="font-size:14px">${fmtNum(reg.b, 2)} · ${fmtNum(reg.r2, 3)}</div></div>`);
+    }
+    root.innerHTML = items.join('');
+  }
+
+  function drawForecastTops() {
+    // Top 10 EPS 2024
+    const arr2024 = DATA.map(c => ({ symbol: c.symbol, v: c.epsForecast && c.epsForecast[0] && c.epsForecast[0].eps }))
+      .filter(x => typeof x.v === 'number' && isFinite(x.v))
+      .sort((a, b) => b.v - a.v).slice(0, 10);
+    makeChart('topForecast2024', {
+      type: 'bar',
+      data: {
+        labels: arr2024.map(x => x.symbol),
+        datasets: [{
+          data: arr2024.map(x => x.v),
+          backgroundColor: function (ctx) {
+            const { chart } = ctx;
+            const { ctx: cx, chartArea } = chart; if (!chartArea) return '#5b8cff';
+            const g = cx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            g.addColorStop(0, '#5b8cff'); g.addColorStop(1, '#22d3ee'); return g;
+          },
+          borderRadius: 6, borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `EPS 2024: Rp ${fmtNum(c.parsed.x, 2)}` } } },
+        scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { callback: v => fmtNum(v, 0) } }, y: { grid: { display: false } } }
+      }
+    });
+
+    // Top slopes (growth)
+    const arrSlope = DATA.map(c => ({ symbol: c.symbol, v: c.epsModel && c.epsModel.b, r2: c.epsModel && c.epsModel.r2 }))
+      .filter(x => typeof x.v === 'number' && isFinite(x.v))
+      .sort((a, b) => b.v - a.v).slice(0, 10);
+    makeChart('topSlope', {
+      type: 'bar',
+      data: {
+        labels: arrSlope.map(x => x.symbol),
+        datasets: [{
+          data: arrSlope.map(x => x.v),
+          backgroundColor: function (ctx) {
+            const { chart } = ctx;
+            const { ctx: cx, chartArea } = chart; if (!chartArea) return '#10d39c';
+            const g = cx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            g.addColorStop(0, '#10d39c'); g.addColorStop(1, '#22d3ee'); return g;
+          },
+          borderRadius: 6, borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Slope: ${fmtNum(c.parsed.x, 2)} EPS/thn (R²=${fmtNum(arrSlope[c.dataIndex].r2, 3)})` } } },
+        scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { callback: v => fmtNum(v, 1) } }, y: { grid: { display: false } } }
+      }
+    });
+  }
+
+  function renderForecastTable() {
+    const q = ($('#fcSearch').value || '').toUpperCase().trim();
+    const horizon = parseInt($('#fcHorizon').value, 10);
+    const futYears = [2024, 2025, 2026, 2027, 2028].slice(0, horizon);
+
+    const rows = DATA.filter(c => !q || c.symbol.includes(q))
+      .map(c => ({
+        symbol: c.symbol,
+        cluster: c.clusterLabel,
+        eps2023: (c.byYear['2023'] || {})['Basic EPS'],
+        forecasts: futYears.map(y => {
+          const f = (c.epsForecast || []).find(x => x.year === y);
+          return f ? f.eps : null;
+        }),
+        r2: c.epsModel && c.epsModel.r2,
+        slope: c.epsModel && c.epsModel.b
+      }))
+      .sort((a, b) => (b.forecasts[0] || -Infinity) - (a.forecasts[0] || -Infinity));
+
+    const thead = $('#forecastTable thead');
+    const tbody = $('#forecastTable tbody');
+    thead.innerHTML = `<tr><th>#</th><th>Symbol</th><th>Klaster</th><th class="num">EPS 2023</th>${futYears.map(y => `<th class="num">EPS ${y}</th>`).join('')}<th class="num">Slope</th><th class="num">R²</th></tr>`;
+    tbody.innerHTML = rows.slice(0, 200).map((x, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td class="symbol">${x.symbol}</td>
+        <td>${x.cluster ? `<span class="tag tag-${x.cluster.toLowerCase()}">${x.cluster}</span>` : '–'}</td>
+        <td class="num">${typeof x.eps2023 === 'number' ? fmtNum(x.eps2023, 2) : '–'}</td>
+        ${x.forecasts.map(f => `<td class="num">${typeof f === 'number' ? fmtNum(f, 2) : '–'}</td>`).join('')}
+        <td class="num">${typeof x.slope === 'number' ? fmtNum(x.slope, 2) : '–'}</td>
+        <td class="num">${typeof x.r2 === 'number' ? fmtNum(x.r2, 3) : '–'}</td>
+      </tr>`).join('');
+  }
+
+  // ============================================================================
   //  Routing / UI wiring
   // ============================================================================
   function setPage(page) {
+    const wasHidden = state.page !== page;
     state.page = page;
     $$('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
     $$('.page').forEach(el => el.classList.toggle('hidden', el.dataset.page !== page));
@@ -1044,12 +1482,37 @@
       compare: ['Compare', 'Bandingkan kinerja antar emiten'],
       ratios: ['Rasio Keuangan', 'Distribusi rasio fundamental seluruh pasar'],
       screener: ['Screener', 'Saring emiten berdasarkan kriteria fundamental Anda'],
-      trends: ['Tren Pasar', 'Pertumbuhan agregat 2020–2023']
+      trends: ['Tren Pasar', 'Pertumbuhan agregat 2020–2023'],
+      clusters: ['Clustering', 'Segmentasi emiten: Sehat · Stabil · Beresiko (K-Means)'],
+      forecast: ['Prediksi EPS', 'Forecast EPS 2024–2028 dengan regresi linier']
     };
     const t = titles[page] || ['', ''];
     $('#pageTitle').textContent = t[0];
     $('#pageSub').textContent = t[1];
-    rerender();
+
+    // Show search only on pages where it makes sense
+    const searchEnabled = ['company', 'compare', 'forecast'];
+    const wrap = $('#globalSearchWrap');
+    if (wrap) {
+      const visible = searchEnabled.includes(page);
+      wrap.style.display = visible ? '' : 'none';
+      const placeholders = {
+        company: 'Cari kode emiten · pindah ke profil',
+        compare: 'Cari kode · tambahkan ke perbandingan',
+        forecast: 'Cari kode · pilih untuk prediksi'
+      };
+      const inp = $('#globalSearch');
+      if (inp && placeholders[page]) inp.placeholder = placeholders[page];
+      if (inp) inp.value = '';
+    }
+
+    // Defer render to next frame so the page section is fully visible
+    // (Chart.js radar/bubble cannot size correctly when parent has display:none)
+    if (wasHidden) {
+      requestAnimationFrame(() => requestAnimationFrame(rerender));
+    } else {
+      rerender();
+    }
   }
 
   function rerender() {
@@ -1060,6 +1523,8 @@
     else if (state.page === 'ratios') renderRatios();
     else if (state.page === 'screener') renderScreener();
     else if (state.page === 'trends') renderTrends();
+    else if (state.page === 'clusters') renderClusters();
+    else if (state.page === 'forecast') renderForecast();
   }
 
   function buildYearPills() {
@@ -1091,7 +1556,21 @@
     $('#footYears').textContent = YEARS[0] + '–' + YEARS[YEARS.length - 1];
     $('#footMetrics').textContent = METRICS.length;
 
+    ensureCompaniesDatalist();
     buildYearPills();
+
+    // Global delegation: handle compare-pill remove buttons (works even after re-render)
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('#cmpChips [data-rm]');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const sym = btn.dataset.rm;
+      state.compare = state.compare.filter(s => s !== sym);
+      drawCompareChips();
+      drawCompareLine();
+      drawCompareRadar();
+    });
 
     // Sidebar nav
     $$('.nav-item').forEach(el => el.addEventListener('click', () => setPage(el.dataset.page)));
@@ -1105,18 +1584,37 @@
       });
     });
 
-    // Search
+    // Search — context-aware (only active on company / compare / forecast)
     $('#globalSearch').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const v = e.target.value.trim().toUpperCase();
-        const c = DATA.find(d => d.symbol === v);
-        if (c) {
-          state.company = v;
-          setPage('company');
-          e.target.value = '';
+      if (e.key !== 'Enter') return;
+      const v = e.target.value.trim().toUpperCase();
+      if (!v) return;
+      const c = DATA.find(d => d.symbol === v);
+      if (!c) { toast('Emiten tidak ditemukan: ' + v); return; }
+
+      if (state.page === 'company') {
+        state.company = v;
+        $('#companySelect').value = v;
+        renderCompany();
+        e.target.value = '';
+        toast('Menampilkan ' + v);
+      } else if (state.page === 'compare') {
+        if (state.compare.includes(v)) {
+          toast(v + ' sudah dibandingkan');
+        } else if (state.compare.length >= 5) {
+          toast('Maksimum 5 emiten');
         } else {
-          toast('Emiten tidak ditemukan: ' + v);
+          state.compare.push(v);
+          drawCompareChips(); drawCompareLine(); drawCompareRadar();
+          e.target.value = '';
+          toast('Ditambahkan: ' + v);
         }
+      } else if (state.page === 'forecast') {
+        state.company = v;
+        $('#fcCompany').value = v;
+        drawForecast();
+        e.target.value = '';
+        toast('Memprediksi ' + v);
       }
     });
 

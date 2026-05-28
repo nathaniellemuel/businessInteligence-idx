@@ -52,6 +52,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-9"/><path d="M14 6h7v7"/></svg>
           <span>Tren Pasar</span>
         </a>
+        <a class="nav-item" data-page="clusters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="12" cy="12" r="2.5"/></svg>
+          <span>Clustering</span>
+        </a>
+        <a class="nav-item" data-page="forecast">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>
+          <span>Prediksi EPS</span>
+        </a>
       </nav>
 
       <div class="sidebar-foot">
@@ -74,9 +82,9 @@
             <label>Tahun</label>
             <div class="year-pills" id="yearPills"></div>
           </div>
-          <div class="search">
+          <div class="search" id="globalSearchWrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input id="globalSearch" placeholder="Cari kode emiten… (mis. AALI, BBCA)" autocomplete="off" />
+            <input id="globalSearch" list="companiesDatalist" placeholder="Cari kode emiten… (mis. AALI, BBCA)" autocomplete="off" />
           </div>
         </div>
       </header>
@@ -286,6 +294,90 @@
             <div class="card-head"><div><h3>Top Growth Net Income</h3><p>2020 → 2023 (%)</p></div></div>
             <div class="chart-wrap"><canvas id="topGrowthNI"></canvas></div>
           </div>
+        </div>
+      </section>
+      <section class="page hidden" data-page="clusters">
+        <div class="cluster-summary" id="clusterSummary"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Distribusi Klaster</h3><p>Hasil K-Means · 595 emiten</p></div></div>
+            <div class="chart-wrap"><canvas id="clusterPie"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Profil Rata-rata Klaster</h3><p>Median rasio finansial · tahun 2023</p></div></div>
+            <div class="chart-wrap"><canvas id="clusterRadar"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Peta Sebaran Emiten</h3><p>Revenue (X) · Net Income (Y) · ukuran = Aset · warna = klaster</p></div>
+            <div class="row-controls">
+              <select id="clusterScatterX">
+                <option value="Total Revenue">X: Total Revenue</option>
+                <option value="Total Assets">X: Total Assets</option>
+                <option value="Total Equity Gross Minority Interest">X: Total Equity</option>
+              </select>
+              <select id="clusterScatterY">
+                <option value="Net Income">Y: Net Income</option>
+                <option value="Operating Income">Y: Operating Income</option>
+                <option value="Gross Profit">Y: Gross Profit</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="clusterScatter"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Daftar Emiten per Klaster</h3><p id="clusterListSub">Pilih kategori</p></div>
+            <div class="row-controls">
+              <select id="clusterFilter">
+                <option value="all">Semua Klaster</option>
+                <option value="Sehat">Sehat</option>
+                <option value="Stabil">Stabil</option>
+                <option value="Beresiko">Beresiko</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap"><table id="clusterTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="page hidden" data-page="forecast">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Prediksi EPS — Regresi Linier</h3><p>Model: y = a + bx pada EPS 2020–2023 · ekstrapolasi 2024–2028</p></div>
+            <div class="row-controls">
+              <select id="fcCompany"></select>
+              <input id="fcHorizon" type="range" min="1" max="5" value="5" step="1" />
+              <span id="fcHorizonLabel" class="muted"></span>
+            </div>
+          </div>
+          <div class="forecast-kpi" id="forecastKPI"></div>
+          <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><h3>Top 10 Prediksi EPS 2024</h3><p>EPS tertinggi tahun depan</p></div></div>
+            <div class="chart-wrap"><canvas id="topForecast2024"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Top 10 Pertumbuhan EPS</h3><p>Slope tertinggi · trend bullish</p></div></div>
+            <div class="chart-wrap"><canvas id="topSlope"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Tabel Prediksi EPS Seluruh Emiten</h3><p>Cari emiten · urutkan dengan klik header</p></div>
+            <div class="row-controls">
+              <input id="fcSearch" placeholder="Cari kode emiten…" />
+            </div>
+          </div>
+          <div class="table-wrap"><table id="forecastTable"><thead></thead><tbody></tbody></table></div>
         </div>
       </section>
     </main>
