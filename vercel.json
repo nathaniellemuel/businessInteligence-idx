@@ -1,20 +1,13 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
-    { "source": "/", "destination": "/dashboard/index.html" }
+    { "source": "/", "destination": "/dashboard/index.html" },
+    { "source": "/dashboard", "destination": "/dashboard/index.html" }
   ],
   "headers": [
     {
       "source": "/dashboard/data.js",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/dashboard/(.*\\.(css|js))",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
   ]
