@@ -1,4 +1,4 @@
-# IDX Fundamental BI · 555 Emiten Bursa Efek Indonesia
+# IDX Fundamental BI · 595 Emiten Bursa Efek Indonesia
 
 Proyek analisis fundamental laporan keuangan emiten BEI tahun 2020–2023, lengkap dengan dashboard Business Intelligence interaktif berbasis HTML/CSS/JavaScript.
 
