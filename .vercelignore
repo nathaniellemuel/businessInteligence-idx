@@ -1,0 +1,9 @@
+# Source files not needed at runtime — dashboard reads from data.js (already pre-built).
+data/raw/
+data/clean/
+data/models/
+docs/
+project1.rmp
+*.docx
+.vscode/
+node_modules/

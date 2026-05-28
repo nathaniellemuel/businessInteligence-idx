@@ -97,3 +97,40 @@ Model OLS `y = a + b·x` dihitung untuk tiap emiten dari data EPS 2020–2023, k
 - [x] K-Means clustering (RapidMiner)
 - [x] Regresi linier prediksi EPS
 - [x] Dashboard BI interaktif
+
+## Deploy ke Vercel
+
+Dashboard ini adalah situs **statis** (HTML + CSS + JS) — tidak perlu server, tidak perlu build step.
+
+**Sebelum deploy, pastikan `dashboard/data.js` sudah ter-generate:**
+
+```cmd
+node dashboard/build_data.js
+```
+
+File `data.js` adalah hasil konversi CSV → JSON yang dimuat oleh dashboard. Tanpa file ini, dashboard akan kosong di production.
+
+**Cara deploy (3 opsi):**
+
+1. **Push ke GitHub lalu import di Vercel:**
+   - `git push` ke repo GitHub
+   - Buka [vercel.com/new](https://vercel.com/new), pilih repo
+   - Framework Preset: pilih **Other** (atau biarkan auto-detect)
+   - Output Directory: kosongkan (root)
+   - Klik Deploy
+
+2. **Vercel CLI:**
+   ```cmd
+   npm i -g vercel
+   vercel
+   ```
+   Ikuti prompt; pada pertanyaan output directory, jawab `./`.
+
+3. **Drag & drop** folder ke [vercel.com/new](https://vercel.com/new).
+
+**File `vercel.json`** sudah dikonfigurasi agar:
+- URL root `/` otomatis menampilkan dashboard
+- File `data.js` & assets di-cache dengan benar
+- Folder `data/raw`, `data/clean`, `data/models`, `docs/` tidak ikut ter-upload (lihat `.vercelignore`)
+
+**Catatan:** kalau update CSV, jalankan ulang `node dashboard/build_data.js`, commit `dashboard/data.js`, lalu push — Vercel akan re-deploy otomatis.
