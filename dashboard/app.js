@@ -7,6 +7,173 @@
   const YEARS = META.years.slice().sort();
   const METRICS = META.metrics.slice();
 
+  // ========================================================================
+  // i18n
+  // ========================================================================
+  const I18N = {
+    id: {
+      'nav.overview': 'Overview',
+      'nav.leaderboard': 'Leaderboard',
+      'nav.company': 'Perusahaan',
+      'nav.compare': 'Compare',
+      'nav.ratios': 'Rasio Keuangan',
+      'nav.screener': 'Screener',
+      'nav.trends': 'Tren Pasar',
+      'nav.clusters': 'Clustering',
+      'nav.forecast': 'Prediksi EPS',
+      'foot.companies': 'Perusahaan',
+      'foot.period': 'Periode',
+      'foot.metrics': 'Metrik',
+      'topbar.year': 'Tahun',
+      'settings.persisted': 'Pengaturan tersimpan otomatis di browser',
+      // page titles & subs
+      'title.overview': 'Overview',
+      'sub.overview': 'Ringkasan fundamental {n} emiten Bursa Efek Indonesia',
+      'title.leaderboard': 'Leaderboard',
+      'sub.leaderboard': 'Peringkat emiten berdasarkan metrik fundamental',
+      'title.company': 'Perusahaan',
+      'sub.company': 'Detail laporan keuangan per emiten',
+      'title.compare': 'Compare',
+      'sub.compare': 'Bandingkan kinerja antar emiten',
+      'title.ratios': 'Rasio Keuangan',
+      'sub.ratios': 'Distribusi rasio fundamental seluruh pasar',
+      'title.screener': 'Screener',
+      'sub.screener': 'Saring emiten berdasarkan kriteria fundamental Anda',
+      'title.trends': 'Tren Pasar',
+      'sub.trends': 'Pertumbuhan agregat 2020–2023',
+      'title.clusters': 'Clustering',
+      'sub.clusters': 'Segmentasi emiten: Sehat · Stabil · Beresiko (K-Means)',
+      'title.forecast': 'Prediksi EPS',
+      'sub.forecast': 'Forecast EPS 2024–2028 dengan regresi linier',
+      // search placeholders
+      'search.company': 'Cari kode emiten · pindah ke profil',
+      'search.compare': 'Cari kode · tambahkan ke perbandingan',
+      'search.forecast': 'Cari kode · pilih untuk prediksi',
+      'search.default': 'Cari kode emiten… (mis. AALI, BBCA)',
+      // toasts
+      'toast.notFound': 'Emiten tidak ditemukan: {x}',
+      'toast.alreadyCompared': '{x} sudah dibandingkan',
+      'toast.maxCompare': 'Maksimum 5 emiten',
+      'toast.added': 'Ditambahkan: {x}',
+      'toast.showing': 'Menampilkan {x}',
+      'toast.predicting': 'Memprediksi {x}',
+      // clusters
+      'cl.sehat': 'Sehat',
+      'cl.stabil': 'Stabil',
+      'cl.beresiko': 'Beresiko',
+      'cl.sehat.desc': 'Profitabilitas tinggi · Ekuitas kuat · Pertumbuhan baik',
+      'cl.stabil.desc': 'Kinerja moderat · Risiko terkontrol · Mayoritas emiten',
+      'cl.beresiko.desc': 'Profitabilitas lemah · Leverage tinggi · Perlu kehati-hatian',
+      'cl.medianRev': 'Median Revenue',
+      'cl.medianNI': 'Median Net Income',
+      'cl.medianROE': 'Median ROE',
+      'cl.medianDER': 'Median DER',
+      'cl.emitenList': 'Daftar Emiten per Klaster',
+      // generic
+      'gen.companies': 'emiten',
+      'gen.year': 'tahun',
+      'gen.cluster': 'klaster',
+      'gen.all': 'Semua',
+      'gen.metric': 'metrik'
+    },
+    en: {
+      'nav.overview': 'Overview',
+      'nav.leaderboard': 'Leaderboard',
+      'nav.company': 'Company',
+      'nav.compare': 'Compare',
+      'nav.ratios': 'Financial Ratios',
+      'nav.screener': 'Screener',
+      'nav.trends': 'Market Trends',
+      'nav.clusters': 'Clustering',
+      'nav.forecast': 'EPS Forecast',
+      'foot.companies': 'Companies',
+      'foot.period': 'Period',
+      'foot.metrics': 'Metrics',
+      'topbar.year': 'Year',
+      'settings.persisted': 'Settings saved automatically in browser',
+      'title.overview': 'Overview',
+      'sub.overview': 'Fundamental summary of {n} listed companies on Indonesia Stock Exchange',
+      'title.leaderboard': 'Leaderboard',
+      'sub.leaderboard': 'Company rankings by fundamental metrics',
+      'title.company': 'Company',
+      'sub.company': 'Detailed financial reports per company',
+      'title.compare': 'Compare',
+      'sub.compare': 'Compare performance across companies',
+      'title.ratios': 'Financial Ratios',
+      'sub.ratios': 'Distribution of fundamental ratios across the market',
+      'title.screener': 'Screener',
+      'sub.screener': 'Filter companies by fundamental criteria',
+      'title.trends': 'Market Trends',
+      'sub.trends': 'Aggregate growth 2020–2023',
+      'title.clusters': 'Clustering',
+      'sub.clusters': 'Company segmentation: Healthy · Stable · At-Risk (K-Means)',
+      'title.forecast': 'EPS Forecast',
+      'sub.forecast': 'EPS forecast 2024–2028 using linear regression',
+      'search.company': 'Search ticker · open profile',
+      'search.compare': 'Search ticker · add to comparison',
+      'search.forecast': 'Search ticker · select for forecast',
+      'search.default': 'Search ticker… (e.g. AALI, BBCA)',
+      'toast.notFound': 'Ticker not found: {x}',
+      'toast.alreadyCompared': '{x} is already in comparison',
+      'toast.maxCompare': 'Maximum 5 companies',
+      'toast.added': 'Added: {x}',
+      'toast.showing': 'Showing {x}',
+      'toast.predicting': 'Forecasting {x}',
+      'cl.sehat': 'Healthy',
+      'cl.stabil': 'Stable',
+      'cl.beresiko': 'At-Risk',
+      'cl.sehat.desc': 'High profitability · Strong equity · Solid growth',
+      'cl.stabil.desc': 'Moderate performance · Controlled risk · Market majority',
+      'cl.beresiko.desc': 'Weak profitability · High leverage · Caution advised',
+      'cl.medianRev': 'Median Revenue',
+      'cl.medianNI': 'Median Net Income',
+      'cl.medianROE': 'Median ROE',
+      'cl.medianDER': 'Median DER',
+      'cl.emitenList': 'Companies by Cluster',
+      'gen.companies': 'companies',
+      'gen.year': 'year',
+      'gen.cluster': 'cluster',
+      'gen.all': 'All',
+      'gen.metric': 'metric'
+    }
+  };
+  const ui = {
+    lang: localStorage.getItem('idx-lang') || 'id',
+    theme: localStorage.getItem('idx-theme') || 'dark'
+  };
+  function t(key, vars) {
+    const dict = I18N[ui.lang] || I18N.id;
+    let s = dict[key] || (I18N.id[key] || key);
+    if (vars) Object.entries(vars).forEach(([k, v]) => { s = s.replace('{' + k + '}', v); });
+    return s;
+  }
+  function applyI18n() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = t(key);
+    });
+    document.querySelectorAll('[data-i18n-cluster]').forEach(el => {
+      const v = el.getAttribute('data-i18n-cluster');
+      if (v === 'all') el.textContent = (ui.lang === 'en' ? 'All Clusters' : 'Semua Klaster');
+      else el.textContent = t('cl.' + v.toLowerCase());
+    });
+    document.documentElement.lang = ui.lang;
+  }
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', ui.theme);
+    // Update Chart.js global colors per theme so future chart instances pick correct values
+    if (window.Chart) {
+      const dark = ui.theme === 'dark';
+      Chart.defaults.color = dark ? '#94a3c0' : '#5a6884';
+      Chart.defaults.borderColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      Chart.defaults.plugins.tooltip.backgroundColor = dark ? 'rgba(15,21,37,.96)' : 'rgba(255,255,255,.97)';
+      Chart.defaults.plugins.tooltip.titleColor = dark ? '#e6ecff' : '#1a2238';
+      Chart.defaults.plugins.tooltip.bodyColor = dark ? '#e6ecff' : '#1a2238';
+      Chart.defaults.plugins.tooltip.borderColor = dark ? 'rgba(91,140,255,.35)' : 'rgba(91,140,255,.25)';
+    }
+  }
+  window.t = t; // expose for debugging
+
   // ---- Theme / chart defaults ------------------------------------------------
   Chart.defaults.color = '#94a3c0';
   Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
@@ -678,7 +845,7 @@
             state.compare.push(v);
             drawCompareChips(); drawCompareLine(); drawCompareRadar();
             e.target.value = '';
-          } else { toast('Emiten tidak ditemukan: ' + v); }
+          } else { toast(t('toast.notFound', { x: v })); }
         }
       });
       root.appendChild(inp);
@@ -1083,26 +1250,23 @@
     summaryRoot.innerHTML = CLUSTER_ORDER.map(label => {
       const n = counts[label] || 0;
       const pct = total ? ((n / total) * 100).toFixed(1) : '0';
-      const desc = {
-        'Sehat': 'Profitabilitas tinggi · Ekuitas kuat · Pertumbuhan baik',
-        'Stabil': 'Kinerja moderat · Risiko terkontrol · Mayoritas emiten',
-        'Beresiko': 'Profitabilitas lemah · Leverage tinggi · Perlu kehati-hatian'
-      }[label];
       const cls = label.toLowerCase();
+      const i18nLabel = t('cl.' + cls);
+      const desc = t('cl.' + cls + '.desc');
       const ni = avgFor(label, r => r['Net Income']);
       const rev = avgFor(label, r => r['Total Revenue']);
       const roe = avgFor(label, r => safeDiv(r['Net Income'], r['Total Equity Gross Minority Interest']) * 100);
       const der = avgFor(label, r => safeDiv(r['Total Liabilities Net Minority Interest'], r['Total Equity Gross Minority Interest']));
       return `
         <div class="cluster-card ${cls}">
-          <div class="cl-title"><h3>${label}</h3><span class="badge">${pct}%</span></div>
+          <div class="cl-title"><h3>${i18nLabel}</h3><span class="badge">${pct}%</span></div>
           <div class="cl-count">${n}</div>
-          <div class="cl-pct">emiten · ${desc}</div>
+          <div class="cl-pct">${t('gen.companies')} · ${desc}</div>
           <div class="cl-stats">
-            <div class="cl-stat"><span>Median Revenue</span><span>${fmtIDR(rev, { rp: true })}</span></div>
-            <div class="cl-stat"><span>Median Net Income</span><span>${fmtIDR(ni, { rp: true })}</span></div>
-            <div class="cl-stat"><span>Median ROE</span><span>${fmtPct(roe)}</span></div>
-            <div class="cl-stat"><span>Median DER</span><span>${der !== null ? fmtNum(der, 2) + 'x' : '–'}</span></div>
+            <div class="cl-stat"><span>${t('cl.medianRev')}</span><span>${fmtIDR(rev, { rp: true })}</span></div>
+            <div class="cl-stat"><span>${t('cl.medianNI')}</span><span>${fmtIDR(ni, { rp: true })}</span></div>
+            <div class="cl-stat"><span>${t('cl.medianROE')}</span><span>${fmtPct(roe)}</span></div>
+            <div class="cl-stat"><span>${t('cl.medianDER')}</span><span>${der !== null ? fmtNum(der, 2) + 'x' : '–'}</span></div>
           </div>
         </div>
       `;
@@ -1252,7 +1416,7 @@
       <tr>
         <td>${i + 1}</td>
         <td class="symbol">${x.symbol}</td>
-        <td><span class="tag tag-${x.cluster.toLowerCase()}">${x.cluster}</span></td>
+        <td><span class="tag tag-${x.cluster.toLowerCase()}">${t('cl.' + x.cluster.toLowerCase())}</span></td>
         <td class="num">${fmtIDR(x.rev, { rp: true })}</td>
         <td class="num">${fmtIDR(x.ni, { rp: true })}</td>
         <td class="num">${fmtIDR(x.ta, { rp: true })}</td>
@@ -1459,7 +1623,7 @@
       <tr>
         <td>${i + 1}</td>
         <td class="symbol">${x.symbol}</td>
-        <td>${x.cluster ? `<span class="tag tag-${x.cluster.toLowerCase()}">${x.cluster}</span>` : '–'}</td>
+        <td>${x.cluster ? `<span class="tag tag-${x.cluster.toLowerCase()}">${t('cl.' + x.cluster.toLowerCase())}</span>` : '–'}</td>
         <td class="num">${typeof x.eps2023 === 'number' ? fmtNum(x.eps2023, 2) : '–'}</td>
         ${x.forecasts.map(f => `<td class="num">${typeof f === 'number' ? fmtNum(f, 2) : '–'}</td>`).join('')}
         <td class="num">${typeof x.slope === 'number' ? fmtNum(x.slope, 2) : '–'}</td>
@@ -1475,20 +1639,8 @@
     state.page = page;
     $$('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
     $$('.page').forEach(el => el.classList.toggle('hidden', el.dataset.page !== page));
-    const titles = {
-      overview: ['Overview', 'Ringkasan fundamental ' + DATA.length + ' emiten Bursa Efek Indonesia'],
-      leaderboard: ['Leaderboard', 'Peringkat emiten berdasarkan metrik fundamental'],
-      company: ['Perusahaan', 'Detail laporan keuangan per emiten'],
-      compare: ['Compare', 'Bandingkan kinerja antar emiten'],
-      ratios: ['Rasio Keuangan', 'Distribusi rasio fundamental seluruh pasar'],
-      screener: ['Screener', 'Saring emiten berdasarkan kriteria fundamental Anda'],
-      trends: ['Tren Pasar', 'Pertumbuhan agregat 2020–2023'],
-      clusters: ['Clustering', 'Segmentasi emiten: Sehat · Stabil · Beresiko (K-Means)'],
-      forecast: ['Prediksi EPS', 'Forecast EPS 2024–2028 dengan regresi linier']
-    };
-    const t = titles[page] || ['', ''];
-    $('#pageTitle').textContent = t[0];
-    $('#pageSub').textContent = t[1];
+    $('#pageTitle').textContent = t('title.' + page);
+    $('#pageSub').textContent = t('sub.' + page, { n: DATA.length });
 
     // Show search only on pages where it makes sense
     const searchEnabled = ['company', 'compare', 'forecast'];
@@ -1496,18 +1648,13 @@
     if (wrap) {
       const visible = searchEnabled.includes(page);
       wrap.style.display = visible ? '' : 'none';
-      const placeholders = {
-        company: 'Cari kode emiten · pindah ke profil',
-        compare: 'Cari kode · tambahkan ke perbandingan',
-        forecast: 'Cari kode · pilih untuk prediksi'
-      };
       const inp = $('#globalSearch');
-      if (inp && placeholders[page]) inp.placeholder = placeholders[page];
-      if (inp) inp.value = '';
+      if (inp) {
+        inp.placeholder = t('search.' + page) || t('search.default');
+        inp.value = '';
+      }
     }
 
-    // Defer render to next frame so the page section is fully visible
-    // (Chart.js radar/bubble cannot size correctly when parent has display:none)
     if (wasHidden) {
       requestAnimationFrame(() => requestAnimationFrame(rerender));
     } else {
@@ -1552,6 +1699,10 @@
   }
 
   function init() {
+    // Apply persisted theme & language before any render
+    applyTheme();
+    applyI18n();
+
     $('#footCompanies').textContent = DATA.length;
     $('#footYears').textContent = YEARS[0] + '–' + YEARS[YEARS.length - 1];
     $('#footMetrics').textContent = METRICS.length;
@@ -1590,31 +1741,31 @@
       const v = e.target.value.trim().toUpperCase();
       if (!v) return;
       const c = DATA.find(d => d.symbol === v);
-      if (!c) { toast('Emiten tidak ditemukan: ' + v); return; }
+      if (!c) { toast(t('toast.notFound', { x: v })); return; }
 
       if (state.page === 'company') {
         state.company = v;
         $('#companySelect').value = v;
         renderCompany();
         e.target.value = '';
-        toast('Menampilkan ' + v);
+        toast(t('toast.showing', { x: v }));
       } else if (state.page === 'compare') {
         if (state.compare.includes(v)) {
-          toast(v + ' sudah dibandingkan');
+          toast(t('toast.alreadyCompared', { x: v }));
         } else if (state.compare.length >= 5) {
-          toast('Maksimum 5 emiten');
+          toast(t('toast.maxCompare'));
         } else {
           state.compare.push(v);
           drawCompareChips(); drawCompareLine(); drawCompareRadar();
           e.target.value = '';
-          toast('Ditambahkan: ' + v);
+          toast(t('toast.added', { x: v }));
         }
       } else if (state.page === 'forecast') {
         state.company = v;
         $('#fcCompany').value = v;
         drawForecast();
         e.target.value = '';
-        toast('Memprediksi ' + v);
+        toast(t('toast.predicting', { x: v }));
       }
     });
 
@@ -1632,7 +1783,63 @@
     // Compare metric change
     $('#cmpMetric').addEventListener('change', drawCompareLine);
 
+    // Settings: theme + language
+    initSettings();
+
     setPage('overview');
+  }
+
+  function initSettings() {
+    const btn = $('#btnSettings');
+    const panel = $('#settingsPanel');
+    if (!btn || !panel) return;
+
+    function highlightSegments() {
+      panel.querySelectorAll('[data-seg="theme"] button').forEach(b => {
+        b.classList.toggle('active', b.dataset.val === ui.theme);
+      });
+      panel.querySelectorAll('[data-seg="lang"] button').forEach(b => {
+        b.classList.toggle('active', b.dataset.val === ui.lang);
+      });
+    }
+    highlightSegments();
+
+    function open() { panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+    function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+    function toggle() { panel.hidden ? open() : close(); }
+
+    btn.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+    document.addEventListener('click', e => {
+      if (panel.hidden) return;
+      if (e.target.closest('#settingsPanel') || e.target.closest('#btnSettings')) return;
+      close();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) close(); });
+
+    panel.querySelectorAll('[data-seg="theme"] button').forEach(b => {
+      b.addEventListener('click', () => {
+        ui.theme = b.dataset.val;
+        localStorage.setItem('idx-theme', ui.theme);
+        applyTheme();
+        highlightSegments();
+        // Re-render current page so chart colors pick up new theme
+        rerender();
+      });
+    });
+    panel.querySelectorAll('[data-seg="lang"] button').forEach(b => {
+      b.addEventListener('click', () => {
+        ui.lang = b.dataset.val;
+        localStorage.setItem('idx-lang', ui.lang);
+        applyI18n();
+        highlightSegments();
+        // Refresh page title/subtitle and re-render so dynamic text updates
+        $('#pageTitle').textContent = t('title.' + state.page);
+        $('#pageSub').textContent = t('sub.' + state.page, { n: DATA.length });
+        const inp = $('#globalSearch');
+        if (inp) inp.placeholder = t('search.' + state.page) || t('search.default');
+        rerender();
+      });
+    });
   }
 
   if (document.readyState === 'loading') {

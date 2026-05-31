@@ -1,4 +1,5 @@
 :root {
+  /* Dark theme (default) */
   --bg-0: #0a0e1a;
   --bg-1: #0f1525;
   --bg-2: #141b2e;
@@ -19,7 +20,36 @@
   --grad-3: linear-gradient(135deg, #10d39c 0%, #22d3ee 100%);
   --grad-4: linear-gradient(135deg, #ffb84d 0%, #ff5d6c 100%);
   --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --bg-radial-1: rgba(91,140,255,.12);
+  --bg-radial-2: rgba(124,91,255,.10);
+  --grid-line: rgba(255,255,255,.04);
   --radius: 14px;
+}
+
+[data-theme="light"] {
+  --bg-0: #f3f5fb;
+  --bg-1: #ffffff;
+  --bg-2: #ffffff;
+  --bg-3: #f6f8fd;
+  --line: #e2e8f3;
+  --line-2: #cdd6e6;
+  --text: #1a2238;
+  --text-muted: #5a6884;
+  --text-dim: #8395b3;
+  --brand: #4a76ee;
+  --brand-2: #6f4fff;
+  --accent: #0ea5b9;
+  --good: #0bb589;
+  --bad: #e54857;
+  --warn: #e89421;
+  --grad-1: linear-gradient(135deg, #4a76ee 0%, #6f4fff 100%);
+  --grad-2: linear-gradient(135deg, #0ea5b9 0%, #4a76ee 100%);
+  --grad-3: linear-gradient(135deg, #0bb589 0%, #0ea5b9 100%);
+  --grad-4: linear-gradient(135deg, #e89421 0%, #e54857 100%);
+  --shadow: 0 6px 20px rgba(60,80,140,.12);
+  --bg-radial-1: rgba(91,140,255,.10);
+  --bg-radial-2: rgba(124,91,255,.06);
+  --grid-line: rgba(0,0,0,.05);
 }
 
 * { box-sizing: border-box; }
@@ -27,13 +57,14 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(91,140,255,.12), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(124,91,255,.10), transparent 60%),
+    radial-gradient(1200px 600px at 80% -10%, var(--bg-radial-1), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, var(--bg-radial-2), transparent 60%),
     var(--bg-0);
   color: var(--text);
   min-height: 100vh;
   letter-spacing: .1px;
   -webkit-font-smoothing: antialiased;
+  transition: background-color .25s ease, color .25s ease;
 }
 
 .app {
@@ -451,3 +482,81 @@ td.tag-sehat, td.tag-stabil, td.tag-beresiko {
 
 .row-controls input#fcSearch { width: 240px; }
 .row-controls input#fcHorizon { width: 140px; accent-color: var(--brand); }
+
+
+/* ===== SETTINGS PANEL ===== */
+.settings-wrap { position: relative; }
+.icon-btn {
+  width: 38px; height: 38px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .15s;
+}
+.icon-btn:hover { color: var(--text); border-color: var(--line-2); background: var(--bg-3); }
+.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn[aria-expanded="true"] {
+  background: var(--grad-1); color: white; border-color: transparent;
+  box-shadow: 0 4px 14px rgba(91,140,255,.35);
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 100;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  min-width: 260px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.settings-panel[hidden] { display: none; }
+.settings-section { display: flex; flex-direction: column; gap: 8px; }
+.settings-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--text-dim); font-weight: 600; }
+.seg-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+.seg-control button {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+  font-family: inherit;
+}
+.seg-control button svg { width: 14px; height: 14px; }
+.seg-control button:hover { color: var(--text); }
+.seg-control button.active {
+  background: var(--grad-1);
+  color: white;
+  box-shadow: 0 2px 8px rgba(91,140,255,.30);
+}
+.seg-control .flag { font-size: 14px; }
+.settings-foot { padding-top: 6px; border-top: 1px solid var(--line); }
+.settings-foot .muted { font-size: 11px; }
+
+[data-theme="light"] body { color-scheme: light; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: var(--bg-1); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--line-2); }
